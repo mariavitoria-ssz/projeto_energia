@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Consumo de Energia</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #F4F4F4;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background-color: #FFFFFF;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+            max-width: 350px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #2E14D9;
+            margin-bottom: 30px;
+            font-size: 1.5em;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: block;
+            color: #3B52D9;
+            font-size: 1em;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            box-sizing: border-box;
+            font-size: 1em;
+            color: #555;
+            transition: all 0.3s ease;
+        }
+
+        .form-group select {
+            background-color: #e7f0ff; /* Cor de fundo para os selects */
+        }
+
+        .form-group input {
+            background-color: #f0f8ff; /* Cor de fundo para os campos de entrada */
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #68C2F2;
+            box-shadow: 0 0 5px rgba(104, 194, 242, 0.5);
+        }
+
+        button {
+            width: 100%;
+            background-color: #13ADF0;
+            color: white;
+            padding: 12px 0;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2em;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #3B8FD9;
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            background-color: #3B8FD9;
+            transform: translateY(0);
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #F4F4F4;
+            border-radius: 10px;
+            font-size: 1.2em;
+            text-align: center;
+            color: #000000;
+        }
+
+        .result span {
+            font-weight: bold;
+            color: #2E14D9;
+            font-size: 1.4em;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                max-width: 90%;
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 1.2em;
+            }
+
+            button {
+                font-size: 1em;
+            }
+
+            .result {
+                font-size: 1em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Calculadora de Consumo de Energia</h1>
+        <form id="consumoForm">
+            <div class="form-group">
+                <label for="equipamento">Equipamento:</label>
+                <select id="equipamento" required>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="tipo">Tipo:</label>
+                <select id="tipo" required>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="bandeira">Bandeira:</label>
+                <select id="bandeira" required>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="horas">Horas de Uso por Dia:</label>
+                <input type="number" id="horas" min="1" required>
+            </div>
+            <div class="form-group">
+                <label for="dias">Dias de Uso no Mês:</label>
+                <input type="number" id="dias" min="1" max="31" required>
+            </div>
+            <button type="button" onclick="calcularConsumo()">Calcular Consumo</button>
+        </form>
+        <div class="result" id="resultado">
+        </div>
+    </div>
+    <script>
+        const equipamentos = [
+            { id: 1, nome: 'Geladeira', potencia: 200 },
+            { id: 2, nome: 'Ar Condicionado', potencia: 1500 },
+            { id: 3, nome: 'Televisão', potencia: 100 },
+            { id: 4, nome: 'Máquina de Lavar', potencia: 500 },
+            { id: 5, nome: 'Micro-ondas', potencia: 1200 },
+            { id: 6, nome: 'Computador', potencia: 250 },
+            { id: 7, nome: 'Ventilador', potencia: 80 },
+            { id: 8, nome: 'Lâmpada LED', potencia: 10 },
+            { id: 9, nome: 'Chuveiro Elétrico', potencia: 5500 },
+            { id: 10, nome: 'Forno Elétrico', potencia: 2000 },
+        ];
+
+        const tipos = [
+            { id: 1, nome: 'Residencial' },
+            { id: 2, nome: 'Comercial' },
+        ];
+
+        const bandeiras = [
+            { id: 1, tipo: 'Verde', valor: 0 },
+            { id: 2, tipo: 'Amarela', valor: 1.89 },
+            { id: 3, tipo: 'Vermelha', valor: 7.87 },
+        ];
+
+        function carregarOpcoes(selectId, dados, chaveNome) {
+            const select = document.getElementById(selectId);
+            dados.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.id;
+                option.text = item[chaveNome];
+                select.add(option);
+            });
+        }
+
+        window.onload = function() {
+            carregarOpcoes('equipamento', equipamentos, 'nome');
+            carregarOpcoes('tipo', tipos, 'nome');
+            carregarOpcoes('bandeira', bandeiras, 'tipo');
+        }
+
+        function calcularConsumo() {
+            const equipamentoId = document.getElementById('equipamento').value;
+            const tipoId = document.getElementById('tipo').value;
+            const bandeiraId = document.getElementById('bandeira').value;
+            const horas = parseInt(document.getElementById('horas').value);
+            const dias = parseInt(document.getElementById('dias').value);
+
+            if (!equipamentoId || !tipoId || !bandeiraId || isNaN(horas) || isNaN(dias)) {
+                alert("Erro: Todos os campos devem ser preenchidos corretamente.");
+                return;
+            }
+
+            if (horas <= 0 || dias <= 0) {
+                alert("Erro: Horas e dias devem ser valores positivos.");
+                return;
+            }
+
+            const equipamento = equipamentos.find(eq => eq.id == equipamentoId);
+            const bandeira = bandeiras.find(b => b.id == bandeiraId);
+
+            if (!equipamento || !bandeira) {
+                alert("Erro: Equipamento ou bandeira não encontrados.");
+                return;
+            }
+
+            const consumoMensal = equipamento.potencia * horas * dias;
+            const consumoKwh = consumoMensal / 1000;
+            const custoBandeira = consumoKwh * bandeira.valor;
+
+         
+            const custoTotal = consumoKwh * bandeira.valor;
+
+            const resultadoDiv = document.getElementById('resultado');
+            resultadoDiv.innerHTML = `Consumo: <span>${consumoKwh.toFixed(2)}</span> kWh<br>Custo Total com Bandeira: R$ <span>${custoTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>`;
+        }
+    </script>
+</body>
+</html>
